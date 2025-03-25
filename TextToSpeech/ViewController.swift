@@ -64,6 +64,7 @@ class ViewController: UIViewController, WKScriptMessageHandler, SpeakResult {
                         // make contract
                         let request = (json["request"] as? String) ?? ""
                         let action = (json["action"] as? String) ?? ""
+                        let callbackName = json["callback"] as? String ?? ""
                         let params = json["parameter"] as? [String: AnyObject]
                         if request == "postSpeak" {
                             if action == "start" {
@@ -71,7 +72,7 @@ class ViewController: UIViewController, WKScriptMessageHandler, SpeakResult {
                                 let speakText = params?["speakText"] as? String ?? ""
                                 let speechRate = params?["speechRate"] as? Float ?? 0.5
                                 let pitch = params?["pitch"] as? Float ?? 1.0
-                                let speakEntity = SpeakEntity(speakId: speakId, speakText: speakText, speechRate: speechRate, pitch: pitch)
+                                let speakEntity = SpeakEntity(speakId: speakId, speakText: speakText, speechRate: speechRate, pitch: pitch, callbackName: callbackName)
                                 speakHeandler?.speak(speakEntity: speakEntity)
                                 return
                             }
@@ -100,11 +101,11 @@ class ViewController: UIViewController, WKScriptMessageHandler, SpeakResult {
     }
  
     // MARK:- SpeakResult Implemetation
-    public func onSpeakStatus(utteranceId: String, speakStatus: SpeakStatus) {
+    public func onSpeakStatus(utteranceId: String, callback: String, speakStatus: SpeakStatus) {
         var param: [String: Any] = [:]
         param["speakId"] = utteranceId
         param["speakStatus"] = speakStatus.rawValue
-        sendPostResponse(callbackName: "postSpeakCallback", params: param)
+        sendPostResponse(callbackName: callback, params: param)
     }
     
     func sendPostResponse(callbackName: String, params: [String: Any]? = nil) {
