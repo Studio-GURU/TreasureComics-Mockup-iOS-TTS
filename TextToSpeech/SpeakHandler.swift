@@ -16,19 +16,21 @@ public class SpeakHandler: NSObject {
     private let stackGroup: String = "TikitSpeakHandler"
     private var callback: SpeakResult? = nil
     private var currentSpeakEntity: SpeakEntity? = nil
+    private var currentCallbackName: String? = nil
+    private var completeCallbackName: String? = nil
 
     override init() {
         super.init()
         self.speechSynthesizer.delegate = self
     }
 
-    public func speak(speakEntity: SpeakEntity) {
+    public func speak(speakEntity: SpeakEntity, callbackName : String) {
         isDeviceInSilentMode { isMuted in
             if isMuted {
-                self.callback?.onSpeakStatus(utteranceId: self.currentSpeakEntity?.speakId ?? "", callback: speakEntity.callback, speakStatus: SpeakStatus.muted)
+                self.callback?.onSpeakStatus(utteranceId: self.currentSpeakEntity?.speakId ?? "", callback: callbackName, speakStatus: SpeakStatus.muted)
             } else {
                 if self.speechSynthesizer.isSpeaking || self.speechSynthesizer.isPaused {
-                    self.callback?.onSpeakStatus(utteranceId: self.currentSpeakEntity?.speakId ?? "", callback: speakEntity.callback, speakStatus: SpeakStatus.playing)
+                    self.callback?.onSpeakStatus(utteranceId: self.currentSpeakEntity?.speakId ?? "", callback: callbackName, speakStatus: SpeakStatus.playing)
                 } else {
                     let utterance = AVSpeechUtterance(string: speakEntity.speakText)
                     utterance.voice = AVSpeechSynthesisVoice(language: "ko-KR")
@@ -50,20 +52,23 @@ public class SpeakHandler: NSObject {
         }
     }
 
-    public func speakPause() {
+    public func speakPause(callbackName: String) {
+        self.currentCallbackName = callbackName
         self.speechSynthesizer.pauseSpeaking(at: AVSpeechBoundary.immediate)
     }
 
-    public func speakResume() {
+    public func speakResume(callbackName: String) {
+        self.currentCallbackName = callbackName
         self.speechSynthesizer.continueSpeaking()
     }
 
-    public func speakStop() {
+    public func speakStop(callbackName: String) {
+        self.currentCallbackName = callbackName
         self.speechSynthesizer.stopSpeaking(at: AVSpeechBoundary.immediate)
     }
 
     public func speakDestroy() {
-        self.speakStop()
+        self.speakStop(callbackName: "")
         self.currentSpeakEntity = nil
         self.callback = nil
     }
@@ -75,23 +80,23 @@ public class SpeakHandler: NSObject {
 
 extension SpeakHandler: AVSpeechSynthesizerDelegate {
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
-        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentSpeakEntity?.callback ?? "", speakStatus: SpeakStatus.start)
+        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: completeCallbackName ?? "", speakStatus: SpeakStatus.start)
     }
 
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentSpeakEntity?.callback ?? "", speakStatus: SpeakStatus.done)
+        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: completeCallbackName ?? "", speakStatus: SpeakStatus.done)
     }
 
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didPause utterance: AVSpeechUtterance) {
-        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentSpeakEntity?.callback ?? "", speakStatus: SpeakStatus.pause)
+        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentCallbackName ?? "", speakStatus: SpeakStatus.pause)
     }
 
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didContinue utterance: AVSpeechUtterance) {
-        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentSpeakEntity?.callback ?? "", speakStatus: SpeakStatus.resume)
+        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentCallbackName ?? "", speakStatus: SpeakStatus.resume)
     }
 
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentSpeakEntity?.callback ?? "", speakStatus: SpeakStatus.stop)
+        callback?.onSpeakStatus(utteranceId: currentSpeakEntity?.speakId ?? "", callback: currentCallbackName ?? "", speakStatus: SpeakStatus.stop)
     }
 }
 

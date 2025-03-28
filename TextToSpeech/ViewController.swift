@@ -73,22 +73,22 @@ class ViewController: UIViewController, WKScriptMessageHandler, SpeakResult {
                                 let speechRate = params?["speechRate"] as? Float ?? 0.5
                                 let pitch = params?["pitch"] as? Float ?? 1.0
                                 let speakEntity = SpeakEntity(speakId: speakId, speakText: speakText, speechRate: speechRate, pitch: pitch, callbackName: callbackName)
-                                speakHeandler?.speak(speakEntity: speakEntity)
+                                speakHeandler?.speak(speakEntity: speakEntity, callbackName: callbackName)
                                 return
                             }
                             
                             if action == "stop" {
-                                speakHeandler?.speakStop()
+                                speakHeandler?.speakStop(callbackName: callbackName)
                                 return
                             }
                             
                             if action == "pause" {
-                                speakHeandler?.speakPause()
+                                speakHeandler?.speakPause(callbackName: callbackName)
                                 return
                             }
                             
                             if action == "resume" {
-                                speakHeandler?.speakResume()
+                                speakHeandler?.speakResume(callbackName: callbackName)
                                 return
                             }
                         }
